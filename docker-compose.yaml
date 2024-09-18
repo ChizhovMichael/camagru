@@ -1,0 +1,36 @@
+version: '3' 
+services: 
+  db:
+    image: mariadb
+    restart: always
+    env_file:
+      - ".env"
+    environment:
+      - MARIADB_DATABASE=${DATABASE_NAME}
+      - MARIADB_ROOT_PASSWORD=root
+      - MARIADB_USER=${DATABASE_USER}
+      - MARIADB_PASSWORD=${DATABASE_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - camagru:/var/lib/mysql
+    networks:
+      - app
+
+  www:
+    build: .
+    image: www
+    ports:
+      - "8000:80"
+    depends_on:
+      - db
+    networks:
+      - app
+
+
+volumes:
+  camagru:
+ 
+networks: 
+  app: 
+    driver: bridge

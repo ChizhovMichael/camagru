@@ -1,0 +1,362 @@
+/* position */
+.absolute-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 20;
+}
+/* screen */
+.overflow-hidden {
+    overflow: hidden;
+}
+.overflow-auto {
+    overflow: auto;
+}
+.full-screen {
+    min-height: 100vh;
+}
+/* opacity */
+.opacity-70 {
+    opacity: .7;
+}
+/* cursor */
+.clickable {
+    cursor: pointer;
+}
+/* text */
+.lh-1 {
+    line-height: 1;
+}
+.text-decoration-none {
+    text-decoration: none !important;
+}
+/* padding */
+.pr-14 {
+    padding-right: 14px;
+}
+/* image */
+.object-fit-cover {
+    object-fit: cover;
+}
+.object-fit-contain {
+    object-fit: contain;
+}
+/* video */
+.video-container {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+}
+.video-stream {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.video-nav {
+    height: 185px;
+    bottom: 0;
+    background: rgba(33, 37, 41, 0.3);
+    z-index: 10;
+    position: absolute;
+    width: 100%;
+}
+.video-button {
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    background: white;
+    outline: 3px solid white;
+    outline-offset: 2px;
+    border: none;
+    cursor: pointer;
+    top: 20px;
+    left: calc(50% - 25px);
+    position: absolute;
+}
+.video-button:disabled {
+    opacity: 0.5;
+}
+.video-upload {
+    height: 40px;
+    width: 40px;
+    cursor: pointer;
+    top: 25px;
+    left: calc(50% + 40px);
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.video-stickers {
+    display: flex;
+    overflow: auto;
+    width: 100%;
+    align-items: center;
+    bottom: 0;
+    position: absolute;
+    left: 0;
+    padding-bottom: 14px;
+    padding-left: 28px;
+    padding-right: 28px;
+}
+.video-overlay {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 5;
+}
+.video-preview {
+    max-height: 400px;
+    height: 100%;
+    border-radius: 12px;
+    max-width: 250px;
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    right: 50px;
+    z-index: 15;
+    transform: translateY(-50%);
+    background: white;
+    box-shadow: 0 10px 50px -16px rgba(33, 37, 41, 1);
+    padding: 8px;
+    overflow: hidden;
+}
+.video-preview-gallery {
+    height: 100%;
+    overflow-y: scroll;
+    box-sizing: content-box; /* So the width will be 100% + 17px */
+}
+
+@media (max-width: 912px) {
+    .video-preview {
+        all: unset;
+    }
+    .video-preview-gallery {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        padding: 14px;
+        box-sizing: border-box;
+        background: white;
+    }
+}
+/* snackbar */
+/* The snackbar - position it at the bottom and in the middle of the screen */
+#snackbar {
+    visibility: hidden; /* Hidden by default. Visible on click */
+    min-width: 250px; /* Set a default minimum width */
+    margin-left: -125px; /* Divide value of min-width by 2 */
+    background-color: #333; /* Black background color */
+    color: #fff; /* White text color */
+    text-align: center; /* Centered text */
+    border-radius: 2px; /* Rounded borders */
+    padding: 16px; /* Padding */
+    position: fixed; /* Sit on top of the screen */
+    z-index: 1060; /* Add a z-index if needed */
+    left: 50%; /* Center the snackbar */
+    bottom: 30px; /* 30px from the bottom */
+}
+
+#snackbar.error {
+    background-color: #dc3545;
+}
+
+#snackbar.success {
+    background-color: #28a745;
+}
+
+/* Show the snackbar when clicking on a button (class added with JavaScript) */
+#snackbar.show {
+    visibility: visible; /* Show the snackbar */
+    /* Add animation: Take 0.5 seconds to fade in and out the snackbar.
+    However, delay the fade out process for 2.5 seconds */
+    -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+/* Animations to fade the snackbar in and out */
+@-webkit-keyframes fadein {
+    from {bottom: 0; opacity: 0;}
+    to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes fadein {
+    from {bottom: 0; opacity: 0;}
+    to {bottom: 30px; opacity: 1;}
+}
+
+@-webkit-keyframes fadeout {
+    from {bottom: 30px; opacity: 1;}
+    to {bottom: 0; opacity: 0;}
+}
+
+@keyframes fadeout {
+    from {bottom: 30px; opacity: 1;}
+    to {bottom: 0; opacity: 0;}
+}
+
+/* main background */
+.background-radial-gradient {
+    background-color: hsl(218, 41%, 15%);
+    background-image: radial-gradient(650px circle at 0% 0%,
+    hsl(218, 41%, 35%) 15%,
+    hsl(218, 41%, 30%) 35%,
+    hsl(218, 41%, 20%) 75%,
+    hsl(218, 41%, 19%) 80%,
+    transparent 100%),
+    radial-gradient(1250px circle at 100% 100%,
+            hsl(218, 41%, 45%) 15%,
+            hsl(218, 41%, 30%) 35%,
+            hsl(218, 41%, 20%) 75%,
+            hsl(218, 41%, 19%) 80%,
+            transparent 100%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+#radius-shape-1 {
+    height: 220px;
+    width: 220px;
+    top: -60px;
+    left: -130px;
+    background: radial-gradient(#44006b, #ad1fff);
+    overflow: hidden;
+}
+
+#radius-shape-2 {
+    border-radius: 38% 62% 63% 37% / 70% 33% 67% 30%;
+    bottom: -60px;
+    right: -110px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(#44006b, #ad1fff);
+    overflow: hidden;
+}
+
+/* spinner */
+.spinner {
+    position: relative;
+}
+
+.spinner:after {
+    content: "";
+    width: 48px;
+    height: 48px;
+    border: 5px solid #FFF;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: block;
+    margin: 0 auto;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* like */
+.like {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    width: 46px;
+    height: 46px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    z-index: 5;
+}
+.like::after {
+    z-index: -2;
+    position: absolute;
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #f6f6f8;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.like svg {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.like svg path {
+    transition: all 0.2s ease;
+}
+.like:hover::after {
+    border-radius: 10px;
+    background: #feeef3;
+    transform: scale(0.88);
+}
+.like:hover svg path {
+    fill: #f65c8a;
+}
+.like:active svg {
+    transform: scale(0.6);
+}
+.like.is-active svg path {
+    fill: #f65c8a;
+}
+
+.bubble-motion {
+    -webkit-animation: bubbleMotion 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation: bubbleMotion 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@-webkit-keyframes bubbleMotion {
+    to {
+        transform: scale(2.6);
+        opacity: 0;
+    }
+}
+@keyframes bubbleMotion {
+    to {
+        transform: scale(2.6);
+        opacity: 0;
+    }
+}
+
+/* Modal */
+.modal-window > div {
+    max-width: 500px;
+    width: 100%;
+    padding: 2em;
+    background: white;
+}
+.modal-window header {
+    font-weight: bold;
+}
+.modal-window h1 {
+    font-size: 150%;
+    margin: 0 0 15px;
+}
+.modal-close {
+    color: #aaa;
+    line-height: 50px;
+    font-size: 80%;
+    position: absolute;
+    right: 0;
+    text-align: center;
+    top: 0;
+    width: 70px;
+    text-decoration: none;
+}
+.modal-close:hover {
+    color: black;
+}
+
+.modal-window > div {
+    border-radius: 1rem;
+}

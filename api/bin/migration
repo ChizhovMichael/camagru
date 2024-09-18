@@ -1,0 +1,216 @@
+#!/usr/bin/env php
+<?php
+
+use Camagru\Kernel\Contract\MigrationInterface;
+
+require dirname(__DIR__).'/config/bootstrap.php';
+
+$config = include_once dirname(__DIR__).'/config/config.php';
+$migrations = dirname(__DIR__).'/migrations';
+$connect = connect();
+
+$command = $argv[1] ?? null;
+if (!$command) {
+    throw new InvalidArgumentException('Add command name.');
+}
+
+try {
+    init();
+} catch (\Throwable $exception) {
+    throw new RuntimeException("Init error: {$exception->getMessage()}");
+}
+
+try {
+    match (true) {
+        $command === 'up' => upMigrations(),
+        $command === 'create' => createMigration(),
+        $command === 'down' => downMigrations(),
+    };
+} catch (\UnhandledMatchError $e) {
+    throw new InvalidArgumentException('Command not find.');
+}
+
+function connect(): \PDO
+{
+    global $config;
+
+    $driver = $config['default_driver'];
+    $connection = $config[$driver];
+    $connect = new \PDO(
+        sprintf(
+            "%s:host=%s;dbname=%s;charset=%s",
+            $connection['driver'],
+            $connection['server'],
+            $connection['database'],
+            $connection['charset'],
+        ),
+        $connection['username'],
+        $connection['password'],
+        [
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+            \PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
+
+    return $connect;
+}
+
+function init(): void
+{
+    global $connect;
+
+    $sql = <<<SQL
+        CREATE TABLE IF NOT EXISTS migrations (
+            version VARCHAR(255) NOT NULL,
+            executed_at DATETIME
+        );
+    SQL;
+
+    $stmt = $connect->prepare($sql);
+    $stmt->execute();
+    $stmt->closeCursor();
+    $stmt = null;
+}
+
+function getMigrationFiles(): array
+{
+    global $migrations;
+
+    $directory = new \RecursiveDirectoryIterator($migrations);
+    $iterator = new \RecursiveIteratorIterator($directory);
+    $files = [];
+    foreach ($iterator as $file => $object) {
+        $basename = $object->getBasename();
+        if ($basename == '.' or $basename == '..') {
+            continue;
+        }
+        if ($object->isDir()) {
+            continue;
+        }
+        $files[$object->getBasename('.php')] = $object->getPathname();
+    }
+
+    return $files;
+}
+
+function getExistMigrations(): array
+{
+    global $connect;
+
+    $sql = <<<SQL
+        SELECT version FROM migrations;
+    SQL;
+    $stmt = $connect->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    $stmt->closeCursor();
+    $stmt = null;
+    return $result;
+}
+
+function upMigrations(): void
+{
+    global $connect;
+
+    $existMigrations = getExistMigrations();
+    $localMigrations = getMigrationFiles();
+
+    ksort($localMigrations);
+
+    foreach ($localMigrations as $name => $path) {
+        if (in_array($name, $existMigrations)) {
+            continue;
+        }
+
+        include_once $path;
+        $migration = new $name;
+
+        if (!$migration instanceof MigrationInterface) {
+            continue;
+        }
+        $sql = $migration->up();
+        if (!$sql) continue;
+
+        try {
+            // don't user transaction because mysql stop it after table operation
+            $stmt = $connect->prepare($sql);
+            $stmt->execute();
+            $stmt = $connect->prepare("INSERT INTO migrations (version, executed_at) VALUES (:version, NOW());");
+            $stmt->execute([':version' => $name]);
+            $stmt->closeCursor();
+            $stmt = null;
+            echo "Migration up {$name}: [SUCCESS]\n";
+        } catch (\Throwable $exception) {
+            echo "Migration up {$name}: [FAILED] {$exception->getMessage()}\n";
+        }
+    }
+}
+
+function createMigration(): void
+{
+    global $migrations;
+
+    $time = time();
+    $name = "Version$time";
+    $filename = "$migrations/$name.php";
+    $data = <<<PHP
+    <?php
+
+    declare(strict_types=1);
+
+    use Camagru\Kernel\Contract\MigrationInterface;
+
+    class {$name} implements MigrationInterface
+    {
+        public function up(): string
+        {
+        }
+
+        public function down(): string
+        {
+        }
+    }
+    PHP;
+
+    file_put_contents($filename, $data);
+    echo "Migration create $name: [SUCCESS]\n";
+}
+
+function downMigrations(): void
+{
+    global $connect;
+
+    $existMigrations = getExistMigrations();
+    $localMigrations = getMigrationFiles();
+
+    krsort($localMigrations);
+
+    foreach ($localMigrations as $name => $path) {
+        if (!in_array($name, $existMigrations)) {
+            continue;
+        }
+
+        include_once $path;
+        $migration = new $name;
+
+        if (!$migration instanceof MigrationInterface) {
+            continue;
+        }
+        $sql = $migration->down();
+        if (!$sql) continue;
+
+        try {
+            // don't user transaction because mysql stop it after table operation
+            $stmt = $connect->prepare($sql);
+            $stmt->execute();
+            $stmt = $connect->prepare("DELETE FROM migrations WHERE version=:version;");
+            $stmt->execute([':version' => $name]);
+            $stmt->closeCursor();
+            $stmt = null;
+            echo "Migration down {$name}: [SUCCESS]\n";
+        } catch (\Throwable $exception) {
+            echo "Migration down {$name}: [FAILED] {$exception->getMessage()}\n";
+        }
+    }
+}

@@ -1,0 +1,152 @@
+#!/usr/bin/env php
+<?php
+
+require dirname(__DIR__).'/config/bootstrap.php';
+
+$config = include_once dirname(__DIR__).'/config/config.php';
+$fixtures = dirname(__DIR__).'/fixtures';
+$connect = connect();
+
+$command = $argv[1] ?? null;
+$name = $argv[2] ?? null;
+if (!$command) {
+    throw new InvalidArgumentException('Add command name.');
+}
+
+try {
+    init();
+} catch (\Throwable $exception) {
+    if (!str_contains($exception->getMessage(), 'Base table or view not found')) {
+        throw new RuntimeException("Init error: {$exception->getMessage()}");
+    }
+}
+
+try {
+    match (true) {
+        $command === 'up' => upFixtures(),
+        $command === 'create' => createFixtures(),
+    };
+} catch (\UnhandledMatchError $e) {
+    throw new InvalidArgumentException('Command not find.');
+}
+
+function connect(): \PDO
+{
+    global $config;
+
+    $driver = $config['default_driver'];
+    $connection = $config[$driver];
+    $connect = new \PDO(
+        sprintf(
+            "%s:host=%s;dbname=%s;charset=%s",
+            $connection['driver'],
+            $connection['server'],
+            $connection['database'],
+            $connection['charset'],
+        ),
+        $connection['username'],
+        $connection['password'],
+        [
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+            \PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
+
+    return $connect;
+}
+
+function getFixtureFiles(): array
+{
+    global $fixtures;
+
+    $directory = new \RecursiveDirectoryIterator($fixtures);
+    $iterator = new \RecursiveIteratorIterator($directory);
+    $files = [];
+    foreach ($iterator as $file => $object) {
+        $basename = $object->getBasename();
+        if ($basename == '.' or $basename == '..') {
+            continue;
+        }
+        if ($object->isDir()) {
+            continue;
+        }
+        $files[$object->getBasename('.php')] = $object->getPathname();
+    }
+
+    return $files;
+}
+
+function init(): void
+{
+    global $connect;
+
+    $localFixtures = getFixtureFiles();
+    $truncate = array_map(
+        callback: static fn (string $name) => "TRUNCATE TABLE $name;",
+        array: array_keys($localFixtures)
+    );
+
+    if (!count($truncate)) {
+        return;
+    }
+
+    $connect->exec('SET FOREIGN_KEY_CHECKS=0;');
+    $connect->exec(implode(' ', $truncate));
+    $connect->exec('SET FOREIGN_KEY_CHECKS=0;');
+}
+
+function upFixtures(): void
+{
+    global $connect;
+
+    $localFixtures = getFixtureFiles();
+
+    foreach ($localFixtures as $name => $path) {
+        $items = include_once $path;
+        foreach ($items as $item) {
+            $keys = array_keys($item);
+            $cols = array_map(function($key) {
+                return sprintf('`%s`', $key);
+            }, $keys);
+            $placeholders = array_map(function($key) {
+                return sprintf(':%s', $key);
+            }, $keys);
+            $params = array_combine($placeholders, $item);
+
+            $query = sprintf(
+                'INSERT INTO `%s` (%s) VALUES (%s)',
+                $name,
+                implode(',', $cols),
+                implode(',', $placeholders)
+            );
+
+            $stmt = $connect->prepare($query);
+            $stmt->execute($params);
+            $stmt->closeCursor();
+            $stmt = null;
+        }
+        unset($items);
+        echo "Fixture up $name: [SUCCESS]\n";
+    }
+}
+
+function createFixtures(): void
+{
+    global $name;
+    global $fixtures;
+
+    if (!$name) {
+        throw new \RuntimeException('Undefined fixture name.');
+    }
+
+    $filename = "$fixtures/$name.php";
+    $data = <<<PHP
+    <?php
+
+    return [];
+    PHP;
+
+    file_put_contents($filename, $data);
+    echo "Fixture create $name: [SUCCESS]\n";
+}

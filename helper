@@ -1,0 +1,6 @@
+Your web application should be at least be compatible with Firefox (>= 41) and
+Chrome (>= 46).
+
+Test email https://temp-mail.org/fr/
+upload_max_filesize = 10M
+post_max_size = 10M
