@@ -193,9 +193,7 @@ class GalleryController extends AbstractController
     }
 
     #[Middleware(class: SecurityMiddleware::class)]
-    #[Middleware(class: AuthMiddleware::class)]
-    #[Middleware(class: ConfirmMiddleware::class)]
-    public function getSticker(Request $request): Response|JsonResponse
+    public function getImageData(Request $request): Response|JsonResponse
     {
         global $config;
 

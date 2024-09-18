@@ -116,7 +116,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/images/{slug}',
-        'controller' => [\Camagru\Controller\GalleryController::class, 'getSticker'],
+        'controller' => [\Camagru\Controller\GalleryController::class, 'getImageData'],
     ],
     [
         'method' => 'POST',
